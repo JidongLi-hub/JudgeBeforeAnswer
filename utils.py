@@ -55,5 +55,3 @@ def jsonl_to_json(jsonl_file_path, json_file_path):
         print(f"错误：解析JSONL文件时出错。请检查文件格式。错误信息: {e}")
     except Exception as e:
         print(f"发生未知错误: {e}")
-
-process()

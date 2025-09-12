@@ -1,2 +1,0 @@
-vllm serve models/Qwen2.5-VL-7B-Instruct --dtype auto --port 7777 --api-key 00000000 --allowed-local-media-path /model/fangly/mllm/ljd/dataset
-vllm serve models/InternVL3-8B-hf --dtype auto --port 7778 --api-key 00000000 --allowed-local-media-path /model/fangly/mllm/ljd/dataset
