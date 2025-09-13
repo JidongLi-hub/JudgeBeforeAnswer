@@ -1,5 +1,6 @@
 *.tar.gz
 *.json
+*.jsonl
 *results/
 test*
-dataset/
+dataset/*

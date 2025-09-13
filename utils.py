@@ -1,5 +1,13 @@
 import json
 
+def sample_evenly(lst, n=1000):
+    # 数据集采样
+    if n >= len(lst):
+        return lst  # 如果需要的数量大于列表长度，直接返回全部
+    step = len(lst) / n  # 间隔
+    indices = [int(i * step) for i in range(n)]
+    return [lst[i] for i in indices]
+
 def process():
     att_path = "attributes_test.json"
     result_path = "./test_results/test_results_InternVL3-8B-hf.jsonl"

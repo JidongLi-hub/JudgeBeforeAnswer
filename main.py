@@ -6,6 +6,7 @@ import os
 from utils import *
 from model_chat import *
 from prompts import Prompts
+import random
 
 def pipeline(mllm, llm, image_path, q_type):
     """ 生成前提错误数据集pipeline """
@@ -47,13 +48,13 @@ def pipeline(mllm, llm, image_path, q_type):
 def main():
     image_dir = "/model/fangly/mllm/ljd/dataset/VG_100K/"
     save_file = "./dataset/incorrect_premise_questions.jsonl"
+    type_capacity = 10
     mllm = MLLM(MLLM_client)
     llm = LLM(LLM_client)
+    q_types = Prompts.supported_types
     images = os.listdir(image_dir)
-    images = images[40:60]
-    q_type = "OCR Content"# "State Attributes" #"Numeric Attributes" #"Visual Attributes" # "Entity Existence"
-    # 生成中断恢复
-    exists = set()
+    images = sample_evenly(images, n=type_capacity*len(q_types))
+    exists = set()  # 生成中断恢复
     try:
         with open(save_file, "r") as f:
             dataset = f.readlines()
@@ -62,15 +63,20 @@ def main():
             exists.add(piece["id"])
     except:
         pass
-
-    with open(save_file, "a")as f:
-        for image in tqdm(images):
-            if image in exists:
-                continue
-            data = pipeline(mllm, llm, os.path.join(image_dir, image), q_type=q_type)
-            if data is not None:
-                f.write(json.dumps(data) + "\n")
     
+    for i, q_type in enumerate(tqdm(q_types)):
+        with open(save_file, "a")as f:
+            for image in tqdm(images[i*type_capacity:(i+1)*type_capacity]):
+                if image in exists:
+                    continue
+                try:
+                    data = pipeline(mllm, llm, os.path.join(image_dir, image), q_type=q_type)
+                except:
+                    print(f"type{q_type}-image{image} failed-------")
+                    continue
+                if data is not None:
+                    f.write(json.dumps(data) + "\n")
+        
     jsonl_to_json(save_file)
 
 if __name__=="__main__":
