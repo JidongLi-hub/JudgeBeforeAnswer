@@ -50,7 +50,8 @@ def main():
     mllm = MLLM(MLLM_client)
     llm = LLM(LLM_client)
     images = os.listdir(image_dir)
-    images = images[:50]
+    images = images[40:60]
+    q_type = "OCR Content"# "State Attributes" #"Numeric Attributes" #"Visual Attributes" # "Entity Existence"
     # 生成中断恢复
     exists = set()
     try:
@@ -66,8 +67,11 @@ def main():
         for image in tqdm(images):
             if image in exists:
                 continue
-            data = pipeline(mllm, llm, os.path.join(image_dir, image))
-            f.write(json.dumps(data) + "\n")
+            data = pipeline(mllm, llm, os.path.join(image_dir, image), q_type=q_type)
+            if data is not None:
+                f.write(json.dumps(data) + "\n")
+    
+    jsonl_to_json(save_file)
 
 if __name__=="__main__":
     main()

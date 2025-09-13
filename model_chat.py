@@ -41,7 +41,10 @@ class LLM:
                 model=self.model_name,
                 messages=[
                     {"role": "user", "content": text}
-                ]
+                ],
+                extra_body={
+                        "chat_template_kwargs": {"enable_thinking": False},  # 关闭Qwen3的思考模式
+                    },
                 )
         
         return completion.choices[0].message.content.strip()
