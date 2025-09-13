@@ -31,6 +31,14 @@ def pipeline(mllm, llm, image_path, q_type, label=False):
         generate_question_prompt =  prompt_generater.get_generate_question_prompt(caption, premise)   
         question = llm.chat(generate_question_prompt)
 
+    # step4 生成回答，指出前提错误或者正常回答问题
+    if label:
+        answer_prompt = prompt_generater.get_real_answer_prompt(question, premise)
+        answer = mllm.chat(image_path, answer_prompt)
+    else:
+        answer_prompt = prompt_generater.get_answer_prompt(question, premise)
+        answer = mllm.chat(image_path, answer_prompt)
+
     # step5 产生一条数据
     data = {
         "id":os.path.basename(image_path),
@@ -38,20 +46,22 @@ def pipeline(mllm, llm, image_path, q_type, label=False):
         "type":q_type,
         "question":question,
         "label":label,  # False代表前提错误负样本，True代表前提正确正样本
-        "premise":premise
+        "premise":premise,
+        "answer":answer
     }
     return data
 
 
 
 def main():
-    image_dir = "/model/fangly/mllm/ljd/dataset/VG_100K/"
-    save_file = "./dataset/incorrect_premise_questions_Test.jsonl"
-    type_capacity = 500  # 每种类型问题使用的图片的数量
+    image_dir = "/model/fangly/mllm/ljd/dataset/VG_100K_2/"
+    save_file = "./dataset/incorrect_premise_questions_GRPO.jsonl"
+    type_capacity = 230  # 每种类型问题使用的图片的数量 230
     mllm = MLLM(MLLM_client)
     llm = LLM(LLM_client)
     q_types = Prompts.supported_types
     images = os.listdir(image_dir)
+    images = images[-10000:]
     images = sample_evenly(images, n=type_capacity*len(q_types)*2)
     nagetive_images = images[::2]
     positive_images = images[1::2]
@@ -99,9 +109,9 @@ def main():
                     else:
                         positive_count[q_type] = 1
 
-    print(f"=========generated {sum(positive_count.values())}positive samples===========")
+    print(f"=========generated {sum(positive_count.values())} positive samples===========")
     print(positive_count)
-    print(f"\n\n=========generated {sum(negative_count.values())}nagetive samples===========")
+    print(f"\n\n=========generated {sum(negative_count.values())} nagetive samples===========")
     print(negative_count)
 
     jsonl_to_json(save_file)

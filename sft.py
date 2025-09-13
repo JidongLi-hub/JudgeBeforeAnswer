@@ -31,7 +31,7 @@ def pipeline(mllm, llm, image_path, q_type, label=False):
         generate_question_prompt =  prompt_generater.get_generate_question_prompt(caption, premise)   
         question = llm.chat(generate_question_prompt)
 
-    # step5 产生一条数据
+    # step4 产生一条数据
     data = {
         "id":os.path.basename(image_path),
         "image_path":image_path,
@@ -45,13 +45,14 @@ def pipeline(mllm, llm, image_path, q_type, label=False):
 
 
 def main():
-    image_dir = "/model/fangly/mllm/ljd/dataset/VG_100K/"
-    save_file = "./dataset/incorrect_premise_questions_Test.jsonl"
-    type_capacity = 500  # 每种类型问题使用的图片的数量
+    image_dir = "/model/fangly/mllm/ljd/dataset/VG_100K_2/"
+    save_file = "./dataset/incorrect_premise_questions_SFT.jsonl"
+    type_capacity = 600  # 每种类型问题使用的图片的数量 
     mllm = MLLM(MLLM_client)
     llm = LLM(LLM_client)
     q_types = Prompts.supported_types
     images = os.listdir(image_dir)
+    images = images[:30000]
     images = sample_evenly(images, n=type_capacity*len(q_types)*2)
     nagetive_images = images[::2]
     positive_images = images[1::2]
@@ -99,9 +100,9 @@ def main():
                     else:
                         positive_count[q_type] = 1
 
-    print(f"=========generated {sum(positive_count.values())}positive samples===========")
+    print(f"=========generated {sum(positive_count.values())} positive samples===========")
     print(positive_count)
-    print(f"\n\n=========generated {sum(negative_count.values())}nagetive samples===========")
+    print(f"\n\n=========generated {sum(negative_count.values())} nagetive samples===========")
     print(negative_count)
 
     jsonl_to_json(save_file)

@@ -550,7 +550,655 @@ class Prompts:
                                     "- Caption: 'The sun is rising in the east, casting a warm glow.' | Correct premise: sun rises in east → Output: 'The sun is rising in the west, how would people adjust their morning routines?'\n"
                 return generate_question_prompt
 
+    def get_real_answer_prompt(self, question=None, premise=None):
+        real_answer_prompt = "You are a reasoning model. You will be given a question that contains a correct premise.\n\n" \
+                            "- Your task is to answer the question directly.\n" \
+                            "- First, verify that the premise in the question is correct based on what you observe in the image.\n" \
+                            "- Then provide a comprehensive answer to the question.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the premise mentioned in the question\n" \
+                            "  3. Confirm that the premise is correct and matches your observation\n" \
+                            "  4. Consider how to answer the question based on the correct premise\n" \
+                            "  5. Formulate the appropriate answer\n" \
+                            "- <answer></answer>: Your direct response to the question (maximum 50 words)\n" \
+                            "  - Provide a clear and comprehensive answer to the question asked\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The person is holding the horse, how would people react to this scene?\"\n" \
+                            "Correct_premise: person is holding horse\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a person who appears to be holding or leading a horse, with their hand on the horse's halter or reins. The question states \"the person is holding the horse,\" and this premise is accurate based on my observation. The person is indeed in physical contact with and controlling the horse, which matches the stated premise perfectly. Now I need to consider how people would typically react to seeing someone holding a horse. This is a normal interaction between humans and horses, so reactions would likely be neutral to positive, perhaps showing interest or admiration.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "People would likely react positively to this scene. They might find it interesting or charming to see someone interacting with a horse, especially in an urban or suburban setting where horses are less common. Some might stop to watch, take photos, or ask questions about the horse. Children would probably be particularly excited and curious. Overall, the reaction would be one of interest and appreciation for the animal.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"There are two apples on the table. Are they ripe?\"\n" \
+                            "Correct_premise: two apples\n\n" \
+                            "<think>\n" \
+                            "In the image, I can observe a table with apples on it. Counting carefully, I can see two apples positioned on the table surface. The question mentions \"two apples on the table,\" and this count is accurate based on my visual observation. The premise is correct. Now I need to assess whether these apples appear ripe. I should examine their color, texture, and overall appearance to determine their ripeness. Ripe apples typically have vibrant colors, smooth skin, and appear firm and healthy.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "Yes, the two apples on the table appear to be ripe. They display vibrant colors and have smooth, healthy-looking skin without visible blemishes or soft spots. Their appearance suggests they are at peak ripeness and would be good to eat.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The door is open, what might someone do when entering the room?\"\n" \
+                            "Correct_premise: open door\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a door that is clearly in an open position, allowing access to the room beyond. The question states \"the door is open,\" and this observation is accurate based on what I can see. The premise is correct - the door is indeed open. Now I need to consider what someone would typically do when entering a room through an open door. Common actions would include walking through, looking around to assess the space, turning on lights if needed, or proceeding to their intended destination within the room.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "When entering the room through the open door, someone would likely walk through the doorway, pause to look around and get oriented with the space, possibly turn on lights if the room is dim, and then proceed to wherever they need to go in the room or begin whatever activity they came to do.\n" \
+                            "</answer>"
+        return real_answer_prompt
+
     def get_answer_prompt(self, question=None, premise=None):
+        match self.q_type:
+            case "Entity Existence":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect premise in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the premise in the question\n" \
+                            "  3. Identify why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the premise rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect premise in the question\n" \
+                            "  - Provide the correct premise explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"What color is the dog on the floor?\"\n" \
+                            "Correct_premise: cat\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see an animal on the floor. However, this animal appears to be a cat, not a dog. It has typical feline features such as pointed ears, whiskers, and a cat-like body structure. The question assumes there is a dog on the floor, but this premise is incorrect based on what I observe. The animal is clearly a cat. Instead of answering about the color, I need to correct this fundamental misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There is no dog on the floor. The animal on the floor is actually a cat.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"These people are holding up an umbrella. Is it raining?\"\n" \
+                            "Correct_premise: tent\n\n" \
+                            "<think>\n" \
+                            "In the image, I observe people engaged in an outdoor activity. They appear to be setting up or handling what looks like camping equipment. The objects they are working with have the characteristics of a tent - with fabric material, support structures, and the typical setup process of camping gear. The question incorrectly identifies this as an umbrella. Umbrellas and tents are quite different in size, structure, and purpose. Rather than speculating about weather, I should correct this misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The people are not holding up an umbrella. They are setting up a tent.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"Why is the woman wearing a hat in the kitchen?\"\n" \
+                            "Correct_premise: man\n\n" \
+                            "<think>\n" \
+                            "Examining the image, I can see a person in what appears to be a kitchen setting. However, looking at the person's physical characteristics, clothing, and overall appearance, this appears to be a man rather than a woman. The question assumes the person is a woman, but this gender identification seems incorrect based on the visual evidence. The question asks about why a woman is wearing a hat, but since the person appears to be male, I should correct this premise rather than explain the hat-wearing behavior.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The person in the kitchen is not a woman. It is a man wearing a hat.\n" \
+                            "</answer>"
+                return answer_prompt
+            
+            case "Visual Attributes":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false visual attribute premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect visual attribute in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the visual attribute mentioned in the question\n" \
+                            "  3. Identify why the attribute is incorrect\n" \
+                            "  4. Conclude that you should correct the attribute rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect visual attribute in the question\n" \
+                            "  - Provide the correct visual attribute explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"What shape is the green apple on the table?\"\n" \
+                            "Correct_premise: red apple\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see an apple on the table. Examining its color closely, the apple appears to be red rather than green. The question asks about a \"green apple,\" but this color description is incorrect based on what I observe. The apple has the typical red coloration with possible variations in shade, but it is definitely not green. Instead of answering about the shape, I need to correct this color misidentification first.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There is no green apple on the table. The apple is red.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"Is the round box heavy?\"\n" \
+                            "Correct_premise: square box\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see a box. Examining its shape, the box appears to have straight edges and corners, making it square or rectangular rather than round. The question refers to a \"round box,\" but this shape description is inaccurate. Round objects are circular, while this box has angular, geometric edges typical of square or rectangular boxes. Rather than speculating about its weight, I should correct this shape misattribution.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The box is not round. The box is square.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"Which metal chair is closer to the window?\"\n" \
+                            "Correct_premise: wooden chair\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a chair near a window. Examining the chair's material and texture, it appears to be made of wood rather than metal. The wood grain, color, and surface characteristics are clearly visible, indicating natural wooden construction. The question assumes the chair is made of metal, but this material identification is incorrect. Wood and metal have distinctly different visual properties, and this chair shows wooden characteristics. I should correct this material misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The chair is not made of metal. It is a wooden chair.\n" \
+                            "</answer>"
+                return answer_prompt
+            
+            case "Numeric Attributes":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false numeric attribute premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect numeric attribute in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the numeric attribute mentioned in the question\n" \
+                            "  3. Count or identify the correct quantity\n" \
+                            "  4. Conclude that you should correct the count rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect numeric attribute in the question\n" \
+                            "  - Provide the correct numeric attribute explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"There are three apples on the table. Are they ripe?\"\n" \
+                            "Correct_premise: two apples\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a table with apples on it. Counting carefully, I observe two apples placed on the table surface. The question states \"there are three apples,\" but this count is incorrect based on my visual observation. I can clearly distinguish two separate apple objects, not three. The question asks about ripeness, but before addressing that, I need to correct the fundamental counting error in the premise.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There are not three apples on the table. There are two apples.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"What's in these five boxes?\"\n" \
+                            "Correct_premise: three boxes\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see several boxes. Counting them systematically, I observe three distinct boxes arranged in the scene. The question refers to \"five boxes,\" but this numerical count is inaccurate. I can clearly identify three separate box objects, each with distinct boundaries and positions. The question asks about the contents, but first I must address the incorrect quantity mentioned in the premise.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There are not five boxes. There are three boxes.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"Can students use these two chairs in the room?\"\n" \
+                            "Correct_premise: several chairs\n\n" \
+                            "<think>\n" \
+                            "Examining the image, I can see a room with chairs. Counting the chairs visible in the scene, there appear to be more than two chairs present. I can identify several chairs arranged in the room, significantly more than the \"two chairs\" mentioned in the question. The exact count appears to be multiple chairs, which would be described as \"several.\" Rather than answering about student usage, I should correct this quantitative misstatement first.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There are not two chairs in the room. There are several chairs.\n" \
+                            "</answer>"
+                return answer_prompt
+
+            case "State Attributes":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false state attribute premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect state attribute in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the state attribute mentioned in the question\n" \
+                            "  3. Identify the actual state and why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the state rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect state attribute in the question\n" \
+                            "  - Provide the correct state attribute explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"What color is the closed door?\"\n" \
+                            "Correct_premise: open door\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a door in the scene. Examining its current state, the door appears to be in an open position rather than closed. I can observe the door frame and the opening that indicates the door is ajar or fully opened. The question refers to a \"closed door,\" but this state description is incorrect based on the visual evidence. The door is clearly not in a closed position. Rather than answering about the color, I need to correct this state misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The door is not closed. It is an open door.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"Which shelf is the intact vase on?\"\n" \
+                            "Correct_premise: broken vase\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see a vase positioned on what appears to be a shelf or surface. Examining the vase carefully, I notice visible damage such as cracks, chips, or broken pieces, indicating that the vase is not intact but rather damaged or broken. The question assumes the vase is \"intact,\" but this condition assessment is incorrect. An intact vase would show no signs of damage, while this vase clearly shows evidence of being broken or damaged. I should correct this condition misstatement.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The vase is not intact. It is a broken vase.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"How bright is the unlit lamp?\"\n" \
+                            "Correct_premise: lit lamp\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a lamp in the scene. Examining its current state, the lamp appears to be illuminated and giving off light, indicating that it is turned on or lit. I can observe the glow or brightness emanating from the lamp, which clearly shows it is in an active, illuminated state. The question refers to an \"unlit lamp,\" but this operational state is incorrect. An unlit lamp would show no illumination, while this lamp is clearly producing light. I should correct this state error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The lamp is not unlit. It is a lit lamp.\n" \
+                            "</answer>"
+                return answer_prompt
+
+            case "OCR Content":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false OCR text premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect text content in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the text content mentioned in the question\n" \
+                            "  3. Read the actual text shown and identify the discrepancy\n" \
+                            "  4. Conclude that you should correct the text rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect text content in the question\n" \
+                            "  - Provide the correct text content explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"What color is the sign with the word GO?\"\n" \
+                            "Correct_premise: STOP\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a sign with text on it. Reading the text carefully, the sign displays the word \"STOP\" rather than \"GO.\" The question refers to a sign with the word \"GO,\" but this text identification is incorrect based on what I can actually read from the sign. STOP and GO are completely different words with opposite meanings. Rather than answering about the color, I need to correct this fundamental text misreading first.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The sign does not show GO. It shows STOP.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"How many stars are shown near the sign with the word CAFE?\"\n" \
+                            "Correct_premise: HOTEL\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see a sign with text on it. Reading the text carefully, the sign displays the word \"HOTEL\" not \"CAFE.\" The question assumes the sign says \"CAFE,\" but this text reading is incorrect. HOTEL and CAFE are different types of business establishments, and the actual text shown is clearly \"HOTEL.\" Instead of counting stars, I should first correct this text misidentification that forms the basis of the question.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The sign does not show CAFE. It shows HOTEL.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"Is the board with the word TOYS hanging outside the shop?\"\n" \
+                            "Correct_premise: BOOKS\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a board or sign with text displayed on it. Reading the text carefully, the board shows the word \"BOOKS\" rather than \"TOYS.\" The question refers to a board with the word \"TOYS,\" but this text identification is incorrect based on my reading of the actual text shown. BOOKS and TOYS represent different types of merchandise or shop categories. Rather than answering about its hanging position, I should correct this text reading error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The board does not show TOYS. It shows BOOKS.\n" \
+                            "</answer>"
+                return answer_prompt
+
+            case "Symbol Meaning":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false symbol premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect symbol in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the symbol or sign mentioned in the question\n" \
+                            "  3. Identify the actual symbol and why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the symbol rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect symbol in the question\n" \
+                            "  - Provide the correct symbol explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"What does the No Parking sign mean at the corner?\"\n" \
+                            "Correct_premise: STOP sign\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a traffic sign at the corner location. Examining the sign carefully, it displays the characteristic octagonal red shape with white text that reads \"STOP,\" which is a standard STOP sign. The question refers to a \"No Parking sign,\" but this symbol identification is incorrect. A No Parking sign would have different visual characteristics, typically showing a \"P\" with a diagonal line through it. The actual sign is clearly a STOP sign. Rather than explaining its meaning, I should correct this symbol misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There is no No Parking sign at the corner. It is a STOP sign.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"Is the Left Turn sign visible on the road?\"\n" \
+                            "Correct_premise: Right Turn sign\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see a traffic sign on or near the road. Examining the sign's symbol and arrow direction, it shows an arrow pointing to the right, indicating a right turn direction. The question asks about a \"Left Turn sign,\" but this directional identification is incorrect. Left turn signs would show arrows pointing to the left, while this sign clearly displays a right-pointing arrow. The visual symbol definitively indicates a right turn, not a left turn. I should correct this directional symbol error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There is no Left Turn sign on the road. It is a Right Turn sign.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"Which direction does the Pedestrian Crossing sign point to?\"\n" \
+                            "Correct_premise: Warning sign\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a sign near what appears to be a construction area. Examining the sign's symbol and design, it displays warning indicators such as caution symbols or construction-related imagery, characteristic of a general warning sign. The question refers to a \"Pedestrian Crossing sign,\" but this symbol identification is incorrect. Pedestrian crossing signs typically show figures of people walking, while this appears to be a warning sign related to construction or hazards. I should correct this symbol category error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "There is no Pedestrian Crossing sign. It is a Warning sign.\n" \
+                            "</answer>"
+                return answer_prompt
+            
+            case "Spatial Relation":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false spatial relation premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect spatial relation in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the spatial relationship mentioned in the question\n" \
+                            "  3. Identify the actual spatial relationship and why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the spatial relation rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect spatial relation in the question\n" \
+                            "  - Provide the correct spatial relation explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The apple is under the table, what might the child do to find it?\"\n" \
+                            "Correct_premise: apple on table\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a table and an apple. Examining their spatial relationship, the apple appears to be positioned on top of the table surface, not underneath it. The question states \"the apple is under the table,\" but this spatial description is incorrect based on my observation. \"Under\" would mean below the table, while \"on\" indicates the apple is resting on the table's surface. The actual positioning shows the apple is clearly on the table. Rather than suggesting search strategies, I should correct this spatial misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The apple is not under the table. It is on the table.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"The river is on the right of the tree, which path would animals take to drink water?\"\n" \
+                            "Correct_premise: river left of tree\n\n" \
+                            "<think>\n" \
+                            "In the image, I can observe a tree and a river. Analyzing their relative positions, the river appears to be located to the left side of the tree when viewed from this perspective. The question claims \"the river is on the right of the tree,\" but this directional relationship is incorrect. Left and right are opposite spatial orientations, and the visual evidence clearly shows the river positioned on the left side of the tree. I should correct this spatial orientation error rather than discuss animal paths.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The river is not on the right of the tree. It is on the left of the tree.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The cake is behind the box, what would you see first when entering the room?\"\n" \
+                            "Correct_premise: cake next to box\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a cake and a box. Examining their spatial arrangement, the cake appears to be positioned alongside or adjacent to the box rather than behind it. The question states \"the cake is behind the box,\" but this positional relationship is incorrect. \"Behind\" would mean the cake is obscured or positioned at the back of the box, while \"next to\" indicates they are side by side. The actual positioning shows they are adjacent to each other. I should correct this spatial relationship error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The cake is not behind the box. It is next to the box.\n" \
+                            "</answer>"
+                return answer_prompt
+
+            case "Interaction Relation":
+                answer_prompt ="You are a reasoning model. You will be given a question that contains a false interaction relation premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect interaction relation in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>...</think><answer>...</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the premise in the question\n" \
+                            "  3. Identify why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the premise rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect premise in the question\n" \
+                            "  - Provide the correct interaction relation\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The horse is holding the person, how would people react?\"\n" \
+                            "Correct_premise: person is holding horse\n\n" \
+                            "<think>\n" \
+                            "I can see an image showing a person and a horse. The person appears to be holding or leading the horse, with the person's hand on the horse's halter or reins. The question states \"the horse is holding the person,\" but this is physically impossible and contradicts what I observe. Horses do not have hands to hold people. The actual relationship shows the person holding/controlling the horse. Rather than answering how people would react, I need to correct this false premise.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The premise is incorrect. The horse is not holding the person. The correct relationship is that the person is holding the horse.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"The pigeon is chasing the girl, what might happen next?\"\n" \
+                            "Correct_premise: girl is chasing pigeon\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a girl and a pigeon. The girl appears to be moving toward or pursuing the pigeon, while the pigeon seems to be moving away from her. The question claims \"the pigeon is chasing the girl,\" but this reverses the actual direction of pursuit. Typically, pigeons flee from humans rather than chase them. The visual evidence shows the girl is the one doing the chasing. I should correct this misstatement rather than speculate about what happens next.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The premise is wrong. The pigeon is not chasing the girl. The girl is chasing the pigeon.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The cat is being petted by the mouse, why does this seem unusual?\"\n" \
+                            "Correct_premise: cat is petting mouse\n\n" \
+                            "<think>\n" \
+                            "In the image, I observe a cat and a mouse. The cat appears to be gently touching or pawing at the mouse, which would be the cat petting/touching the mouse. The question states \"the cat is being petted by the mouse,\" which reverses the roles. This is biologically implausible as mice are much smaller than cats and typically avoid cats rather than pet them. The actual interaction shows the cat as the active agent touching the mouse. I need to correct this false premise.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The premise is incorrect. The cat is not being petted by the mouse. The cat is petting the mouse.\n" \
+                            "</answer>"                
+                return answer_prompt
+
+            case "Possessive Relation":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false possessive relation premise.\n\n" \
+                        "- Your task is NOT to answer the question.\n" \
+                        "- Instead, you must identify the incorrect possessive relation in the question and state that it is wrong.\n" \
+                        "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                        "Format Requirements:\n" \
+                        "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                        "  1. First, briefly describe what you observe in the image\n" \
+                        "  2. Then analyze the possessive/causal relationship mentioned in the question\n" \
+                        "  3. Identify the actual relationship and why the premise is incorrect\n" \
+                        "  4. Conclude that you should correct the relationship rather than answer the question\n" \
+                        "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                        "  - Point out the incorrect possessive relation in the question\n" \
+                        "  - Provide the correct relation explicitly\n\n" \
+                        f"Question: **{question}**\n" \
+                        f"Correct_premise: **{premise}**\n\n" \
+                        "Examples:\n\n" \
+                        "Example 1:\n" \
+                        "Question: \"If the cart is pulling the horse, how far could they travel together?\"\n" \
+                        "Correct_premise: horse pulls cart\n\n" \
+                        "<think>\n" \
+                        "Looking at the image, I can see a horse and a cart. Examining their relationship, the horse appears to be positioned in front of the cart, connected by harnesses or reins, which indicates the horse is the one providing the pulling force. The question states \"the cart is pulling the horse,\" but this causal relationship is reversed. In reality, horses are the animals that provide power and pull carts, not the other way around. This is a fundamental reversal of the logical cause-and-effect relationship. I should correct this before discussing travel distance.\n" \
+                        "</think>\n\n" \
+                        "<answer>\n" \
+                        "The cart is not pulling the horse. The horse pulls the cart.\n" \
+                        "</answer>\n\n" \
+                        "Example 2:\n" \
+                        "Question: \"If the castle builds the bricks, how strong will the structure be?\"\n" \
+                        "Correct_premise: bricks build castle\n\n" \
+                        "<think>\n" \
+                        "In the image, I can observe a castle structure and bricks. Analyzing the construction relationship, bricks are the building materials used to construct the castle, not the other way around. The question states \"the castle builds the bricks,\" but this construction relationship is illogical and reversed. Castles are built from bricks and other materials; they don't create their own building materials. This represents a fundamental misunderstanding of the cause-and-effect relationship in construction. I should correct this logical error rather than assess structural strength.\n" \
+                        "</think>\n\n" \
+                        "<answer>\n" \
+                        "The castle does not build the bricks. The bricks build the castle.\n" \
+                        "</answer>\n\n" \
+                        "Example 3:\n" \
+                        "Question: \"If the book reads the student, what knowledge would be gained?\"\n" \
+                        "Correct_premise: student reads book\n\n" \
+                        "<think>\n" \
+                        "Looking at the image, I can see a student and a book. Examining their relationship, the student appears to be the active agent holding or looking at the book, which indicates the student is reading the book. The question states \"the book reads the student,\" but this relationship is nonsensical and reversed. Books are inanimate objects that cannot read; students are the ones who read books to gain knowledge. This reverses the fundamental subject-object relationship in the learning process. I should correct this logical impossibility.\n" \
+                        "</think>\n\n" \
+                        "<answer>\n" \
+                        "The book does not read the student. The student reads the book.\n" \
+                        "</answer>"
+                return answer_prompt
+
+            case "Emotion":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false emotional state premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect emotional state in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the emotional state mentioned in the question\n" \
+                            "  3. Identify the actual emotional state and why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the emotional state rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect emotional state in the question\n" \
+                            "  - Provide the correct emotional state explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The man is joyful, what might he be celebrating?\"\n" \
+                            "Correct_premise: man is sad\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a man whose facial expression and body language suggest sadness rather than joy. His facial features appear downturned, his posture seems dejected, and his overall demeanor indicates a melancholic or sorrowful state. The question states \"the man is joyful,\" but this emotional assessment is incorrect based on the visual cues I observe. Joyful expressions typically involve smiling, upright posture, and bright eyes, which are not present here. Rather than speculating about celebrations, I should correct this emotional state misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The man is not joyful. He is sad.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"The woman is angry, how would her friends try to calm her down?\"\n" \
+                            "Correct_premise: woman is joyful\n\n" \
+                            "<think>\n" \
+                            "In the image, I can observe a woman whose facial expression and body language indicate happiness and joy. She appears to be smiling, her eyes seem bright and positive, and her overall demeanor suggests a cheerful, joyful state. The question claims \"the woman is angry,\" but this emotional reading is incorrect. Angry expressions typically involve frowning, tense facial muscles, and aggressive body language, none of which are evident here. The woman clearly displays positive, joyful emotions. I should correct this emotional state error rather than suggest calming strategies.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The woman is not angry. She is joyful.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The dog is calm, which game would it play with the children in this weather?\"\n" \
+                            "Correct_premise: dog is fearful\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a dog whose body language and behavior suggest fear rather than calmness. The dog appears to have a tense posture, possibly cowering or showing signs of anxiety such as lowered head, tucked tail, or trembling. These are indicators of fearfulness, not calmness. The question states \"the dog is calm,\" but this behavioral assessment is incorrect. Calm dogs typically display relaxed postures, neutral expressions, and confident stances, which are not present here. I should correct this emotional state misreading.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The dog is not calm. It is fearful.\n" \
+                            "</answer>"
+                return answer_prompt
+            
+            case "Scene":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false scene premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect scene premise in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the scene or activity mentioned in the question\n" \
+                            "  3. Identify the actual scene/activity and why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the scene rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect scene premise in the question\n" \
+                            "  - Provide the correct scene premise explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The farmer is harvesting the crops, what tools might he use?\"\n" \
+                            "Correct_premise: farmer is planting crops\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see a farmer working in a field. Examining the activity more closely, the farmer appears to be engaged in planting or sowing activities, such as placing seeds in the soil or preparing the ground for planting. The question states \"the farmer is harvesting the crops,\" but this activity description is incorrect. Harvesting involves gathering mature crops, while planting involves putting seeds into the ground. These are opposite activities in the agricultural cycle. Rather than suggesting harvesting tools, I should correct this activity misidentification.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The farmer is not harvesting the crops. He is planting crops.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"The audience is leaving the stadium, which direction would the traffic flow?\"\n" \
+                            "Correct_premise: audience is entering\n\n" \
+                            "<think>\n" \
+                            "In the image, I can observe people at a stadium setting. Analyzing their movement and body language, the crowd appears to be moving toward the stadium entrance, with people walking in the direction of the gates or entrances. The question claims \"the audience is leaving the stadium,\" but this movement description is incorrect. Leaving would involve people moving away from the stadium, while entering involves moving toward and into the venue. The visual evidence shows people approaching or entering the stadium. I should correct this directional activity error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The audience is not leaving the stadium. They are entering.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The sky is bright and sunny, what outdoor activities might people enjoy?\"\n" \
+                            "Correct_premise: sky is dark and cloudy\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can observe the sky and weather conditions. The sky appears to be overcast with dark, heavy clouds, and the overall lighting suggests gloomy or stormy weather conditions. The question describes the sky as \"bright and sunny,\" but this weather assessment is completely incorrect. Bright and sunny skies would show clear blue skies with visible sunshine, while this image shows the opposite - dark, cloudy conditions that suggest poor weather. I should correct this weather condition misidentification rather than suggest outdoor activities.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The sky is not bright and sunny. It is dark and cloudy.\n" \
+                            "</answer>"
+                return answer_prompt
+            
+            case "Logical":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false logical sequence premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect logical sequence in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the logical sequence or cause-effect relationship mentioned in the question\n" \
+                            "  3. Identify the correct logical sequence and why the premise is incorrect\n" \
+                            "  4. Conclude that you should correct the logical sequence rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect logical sequence in the question\n" \
+                            "  - Provide the correct logical sequence explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The ice cream melted first and then fell, what would a child do after seeing it?\"\n" \
+                            "Correct_premise: ice cream fell → it melted\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see ice cream that appears to have fallen and is now melting. The question suggests the sequence was \"melted first and then fell,\" but this logical order is incorrect. Ice cream typically maintains its solid form when held properly. The logical sequence would be that the ice cream fell first (due to dropping, slipping, or losing grip), and then as a result of being on the ground or a warm surface, it began to melt. Melting is typically a consequence of the fall, not the cause. I should correct this cause-and-effect reversal.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The ice cream did not melt first and then fall. It fell first and then melted.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"People used umbrellas, so the weather became hot, how would this affect outdoor activities?\"\n" \
+                            "Correct_premise: weather is hot → people use umbrellas\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see people using umbrellas in what appears to be hot, sunny weather. The question suggests that \"people used umbrellas, so the weather became hot,\" but this causal relationship is reversed and illogical. Umbrellas don't cause weather changes; rather, weather conditions cause people to use umbrellas. In hot, sunny weather, people use umbrellas for shade and protection from the sun. The correct sequence is that hot weather leads to umbrella usage, not the other way around. I should correct this cause-and-effect error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "People using umbrellas did not cause the weather to become hot. The weather is hot, so people use umbrellas.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The flowers bloomed because they were watered, then the rain started, what season might this be?\"\n" \
+                            "Correct_premise: rain started → flowers were watered → flowers bloomed\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see blooming flowers in what appears to be a natural outdoor setting with signs of recent rainfall. The question suggests the sequence was \"flowers bloomed because they were watered, then rain started,\" but this temporal and causal order is incorrect. The logical sequence would be that rain started first, providing natural watering to the flowers, which then caused them to bloom. Rain is the natural cause that leads to watering, which then results in blooming. I should correct this sequence error.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The sequence is incorrect. The rain started first, which watered the flowers, then the flowers bloomed.\n" \
+                            "</answer>"
+                return answer_prompt
+            
+            case "Commonsense":
+                answer_prompt = "You are a reasoning model. You will be given a question that contains a false commonsense premise.\n\n" \
+                            "- Your task is NOT to answer the question.\n" \
+                            "- Instead, you must identify the incorrect commonsense premise in the question and state that it is wrong.\n" \
+                            "- You must output in the format: <think>xxxxx</think><answer>xxxxx</answer>\n\n" \
+                            "Format Requirements:\n" \
+                            "- <think></think>: Your reasoning process (maximum 150 words)\n" \
+                            "  1. First, briefly describe what you observe in the image\n" \
+                            "  2. Then analyze the commonsense premise mentioned in the question\n" \
+                            "  3. Identify why the premise violates basic commonsense or natural laws\n" \
+                            "  4. Conclude that you should correct the commonsense error rather than answer the question\n" \
+                            "- <answer></answer>: Your final response (maximum 50 words)\n" \
+                            "  - Point out the incorrect commonsense premise in the question\n" \
+                            "  - Provide the correct commonsense premise explicitly\n\n" \
+                            f"Question: **{question}**\n" \
+                            f"Correct_premise: **{premise}**\n\n" \
+                            "Examples:\n\n" \
+                            "Example 1:\n" \
+                            "Question: \"The apple is flying up to the tree, what would happen if a child tried to catch it?\"\n" \
+                            "Correct_premise: apple falls to ground\n\n" \
+                            "<think>\n" \
+                            "Looking at the image, I can see an apple that appears to be falling or has fallen from a tree. The question states \"the apple is flying up to the tree,\" but this violates basic physics and commonsense knowledge. Gravity causes objects like apples to fall downward, not fly upward. Apples don't have any mechanism for flight and are subject to gravitational force. When apples detach from trees, they naturally fall to the ground due to gravity. This premise contradicts fundamental natural laws. I should correct this physics impossibility.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The apple does not fly up to the tree. It falls to the ground.\n" \
+                            "</answer>\n\n" \
+                            "Example 2:\n" \
+                            "Question: \"The boat is driving on the road, which vehicles might it meet?\"\n" \
+                            "Correct_premise: boat floats on water\n\n" \
+                            "<think>\n" \
+                            "In the image, I can see a boat in what appears to be a water environment. The question claims \"the boat is driving on the road,\" but this violates basic commonsense about transportation. Boats are designed to float on water using buoyancy principles and cannot operate on roads. Roads are for land vehicles with wheels, while boats require water for their hull design to function properly. Boats would be damaged and unable to move effectively on solid road surfaces. This premise contradicts basic transportation knowledge.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The boat is not driving on the road. It floats on water.\n" \
+                            "</answer>\n\n" \
+                            "Example 3:\n" \
+                            "Question: \"The sun is rising in the west, how would people adjust their morning routines?\"\n" \
+                            "Correct_premise: sun rises in east\n\n" \
+                            "<think>\n" \
+                            "Looking at the image showing what appears to be a sunrise or sunset scene, the question states \"the sun is rising in the west,\" but this contradicts fundamental astronomical knowledge. Due to Earth's rotation from west to east, the sun always appears to rise in the east and set in the west from any location on Earth. This is a universal, consistent phenomenon that has been observed throughout human history. The premise violates basic geographical and astronomical commonsense that is fundamental to human understanding of daily cycles.\n" \
+                            "</think>\n\n" \
+                            "<answer>\n" \
+                            "The sun is not rising in the west. It rises in the east.\n" \
+                            "</answer>"
+                return answer_prompt
+    
+    
+    def get_answer_prompt_old(self, question=None, premise=None):
         match self.q_type:
             case "Entity Existence":
                 answer_prompt = "You are a reasoning model. You will be given a question that contains a false premise.\n\n" \
