@@ -330,8 +330,21 @@ class Prompts:
                 return caption_prompt
 
 
+    def get_generate_real_question_prompt(self, caption=None, premise=None):
+        generate_real_question_prompt = "You are a question generation model. Your task is to create a question that includes the correct premise.\n\n" \
+                                    "Instructions:\n" \
+                                    f"- You are given a caption: **{caption}** and a correct premise: **{premise}**.\n" \
+                                    "- The question must include the correct premise explicitly.\n" \
+                                    "- The question should NOT directly ask about the premise itself. Instead, it should ask about another aspect of the scene while incorporating the correct premise.\n" \
+                                    "- Don't ask subjective questions, just ask objective questions in caption, and they should be very easy to answer, and you can answer them in one or two sentences." \
+                                    "- Do not output any explanation or additional text, only the question.\n" \
+                                    "- Generate only one question that is simple, clear, and easy to answer. You can vary the question word, e.g., 'What,' 'How,' 'Which,' or 'Why.'\n\n" \
+                                    "Examples:\n" \
+                                    "- Caption: 'An apple is resting on the table.' | Correct premise: apple on table → Output: 'The apple is on the table, Can the little boy reach it?'\n" \
+                                    "- Caption: 'A river runs on the left side of the tree.' | Correct premise: river left of tree → Output: 'The river is on the left of the tree, what animals might come to drink from it?'\n" \
+                                    "- Caption: 'A cake is placed next to a box.' | Correct premise: cake next to box → Output: 'The cake is next to the box, Please describe the color composition of the cake.?'\n"
 
-
+        return generate_real_question_prompt
 
     def get_generate_question_prompt(self, caption=None, premise=None):
         match self.q_type:
@@ -536,7 +549,6 @@ class Prompts:
                                     "- Caption: 'A boat is floating on the calm water.' | Correct premise: boat floats on water → Output: 'The boat is driving on the road, which vehicles might it meet?'\n" \
                                     "- Caption: 'The sun is rising in the east, casting a warm glow.' | Correct premise: sun rises in east → Output: 'The sun is rising in the west, how would people adjust their morning routines?'\n"
                 return generate_question_prompt
-
 
     def get_answer_prompt(self, question=None, premise=None):
         match self.q_type:
