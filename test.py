@@ -3,6 +3,7 @@ from openai import OpenAI
 import requests
 from tqdm import tqdm
 import os
+from utils import *
 
 def VLLM_chat(model_name, client, image_path, text):
     completion = client.chat.completions.create(
@@ -20,51 +21,62 @@ def VLLM_chat(model_name, client, image_path, text):
     return completion.choices[0].message.content.strip()
 
 
-def main():
-    model_name = "models/InternVL3-8B-hf"  # "models/Qwen2.5-VL-7B-Instruct"
+def main(model_name ="../models/Qwen2.5-VL-7B-Instruct", port="7001"):
     client = OpenAI(
-                    base_url="http://localhost:7778/v1",
+                    base_url=f"http://localhost:{port}/v1",
                     api_key="00000000",
                 )
-    test_path = "./attributes_test.json"
-    output_path = f'./test_results/test_results_{model_name.replace("models/", "")}.jsonl'
+    test_path = "./dataset/incorrect_premise_questions_Test.json"
+    output_path = f'./results/test_results_{model_name.replace("../models/", "")}.jsonl'
+    exist_ids = set()
+    try:
+        with open(output_path, "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                exist_ids.add(json.loads(line)["id"])
+    except:
+        pass
+
     with open(test_path, "r") as f:
         data = json.load(f)
-    # data = data[::34]
+
     for dic in tqdm(data):
-        question = dic.get("q", None)
-        qid = dic.get("qid", None)
-        image_id = dic["tuplist"][0]["irr_imid"]
-        image_path1 = "/model/fangly/mllm/ljd/dataset/VG_100K/" + str(image_id) + ".jpg"
-        image_path2 = "/model/fangly/mllm/ljd/dataset/VG_100K_2/" + str(image_id) + ".jpg"
-        image_id = "000000000000"+ str(image_id)
-        image_id = "COCO_val2014_" + image_id[-12:]  + ".jpg"
-        image_path3 = "/model/fangly/mllm/ljd/dataset/train2014/" + image_id
-        image_path4 = "/model/fangly/mllm/ljd/dataset/val2014/" + image_id
-        image_paths = [image_path1, image_path2, image_path3, image_path4]
-        for image_path in image_paths:
-            if os.path.exists(image_path):             
-                if question is not None:
-                    try:
-                        response = VLLM_chat(model_name, client, image_path, question)
-                    except:
-                        continue
-                result = {
-                    "question":question,
-                    "question_id":qid,
-                    "image_id":os.path.basename(image_path),
-                    "response":response
-                }
-                with open(output_path, "a") as f:
-                    f.write(json.dumps(result) + "\n")
-                break
+        if dic["id"] in exist_ids:
+            continue
+        question = dic.get("question", None) 
+        image_path = dic.get("image_path")
+        if os.path.exists(image_path):             
+            try:
+                response = VLLM_chat(model_name, client, image_path, question)
+            except:
+                continue
+            result = {
+                "id" : dic.get("id", None),
+                "image_path": dic.get("image_path", None),
+                "type": dic.get("type", None),
+                "question":question,
+                "label":dic.get("label"),
+                "premise":dic.get("premise", None),
+                "response":response
+            }
+            with open(output_path, "a") as f:
+                f.write(json.dumps(result) + "\n")
+        else:
+            print(f"image {image_path} is not exists!")
+    jsonl_to_json(output_path)
     print(f"Finished! Stored history to {output_path}")
 
 
 
 
 if __name__=="__main__":
-    main()
+    # main(model_name="../models/Qwen2.5-VL-7B-Instruct", port="7001")
+    main(model_name="../models/InternVL3-8B-hf", port="7005")
+    # main(model_name="../models/Ola-7b", port="7002")
+    # main(model_name="../models/MiniCPM_o_2.6-FlagOS-NVIDIA", port="7003")
+    # main(model_name="../models/llava-onevision-qwen2-7b-ov-hf", port="7004")
+    
+    
     # headers = {"Authorization": "Bearer 00000000"}
     # response = requests.get(url="http://localhost:7777/v1/models", headers=headers)
     # print(response.json())

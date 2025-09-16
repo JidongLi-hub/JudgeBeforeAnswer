@@ -2,5 +2,4 @@
 *.json
 *.jsonl
 *results/
-test*
 dataset/*
