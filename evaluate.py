@@ -321,6 +321,6 @@ def main(file_name):
 
 if __name__=="__main__":
     main(file_name="test_results_Qwen2.5-VL-7B-Instruct.json")
-    main("test_results_llava-onevision-qwen2-7b-ov-hf.json")
-    main("test_results_InternVL3-8B-hf.json")
-    main("test_results_llava-1.5-7b-hf.json")
+    # main("test_results_llava-onevision-qwen2-7b-ov-hf.json")
+    # main("test_results_InternVL3-8B-hf.json")
+    # main("test_results_llava-1.5-7b-hf.json")
