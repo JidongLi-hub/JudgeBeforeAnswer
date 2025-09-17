@@ -71,10 +71,11 @@ def main(model_name ="../models/Qwen2.5-VL-7B-Instruct", port="7001"):
 
 if __name__=="__main__":
     # main(model_name="../models/Qwen2.5-VL-7B-Instruct", port="7001")
-    main(model_name="../models/InternVL3-8B-hf", port="7005")
+    # main(model_name="../models/InternVL3-8B-hf", port="7005")
     # main(model_name="../models/Ola-7b", port="7002")
-    # main(model_name="../models/MiniCPM_o_2.6-FlagOS-NVIDIA", port="7003")
-    # main(model_name="../models/llava-onevision-qwen2-7b-ov-hf", port="7004")
+    # main(model_name="../models/glm-4v-9b", port="7002")
+    main(model_name="../models/llava-1.5-7b-hf", port="7003")
+    # main(model_name="../models/MiniCPM-V-2_6", port="7004")
     
     
     # headers = {"Authorization": "Bearer 00000000"}

@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=1,2 vllm serve ../models/Qwen3-32B --dtype auto --port 8888 --api-key 00000000 --gpu-memory-utilization 0.9 --tensor-parallel-size 2 --allowed-local-media-path /model/fangly/mllm/ljd/dataset
+CUDA_VISIBLE_DEVICES=0,3 vllm serve ../models/Qwen3-32B --dtype auto --port 8888 --api-key 00000000 --gpu-memory-utilization 0.9 --tensor-parallel-size 2 --allowed-local-media-path /model/fangly/mllm/ljd/dataset 
