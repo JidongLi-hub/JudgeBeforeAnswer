@@ -98,7 +98,7 @@ def compute_metrics(evaluated_data):
     true_error_and_judged_error = sum(1 for d in evaluated_data if d["label"] is False and d["judge"] is False)
     true_correct_and_judged_correct = sum(1 for d in evaluated_data if d["label"] is True and d["judge"] is True)
 
-    FPC = true_error_and_judged_error / total if total > 0 else 0
+    FPC = (true_error_and_judged_error+true_correct_and_judged_correct) / total if total > 0 else 0
     FPDP = true_error_and_judged_error / judged_error_total if judged_error_total > 0 else 0
     TPIR = true_correct_and_judged_correct / judged_correct_total if judged_correct_total > 0 else 0
 
@@ -321,6 +321,6 @@ def main(file_name):
 
 if __name__=="__main__":
     main(file_name="test_results_Qwen2.5-VL-7B-Instruct.json")
-    # main("test_results_llava-onevision-qwen2-7b-ov-hf.json")
-    # main("test_results_InternVL3-8B-hf.json")
-    # main("test_results_llava-1.5-7b-hf.json")
+    main("test_results_llava-onevision-qwen2-7b-ov-hf.json")
+    main("test_results_InternVL3-8B-hf.json")
+    main("test_results_llava-1.5-7b-hf.json")
