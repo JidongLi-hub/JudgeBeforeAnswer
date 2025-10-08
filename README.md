@@ -6,8 +6,8 @@ The original code of constructing JBA data set is given in this repository, whic
 
 
 # Quick Start
-run `main.py` to constrcut the dataset
+Find our JBA dataset in `dataset/Judge_Before_Answer.json`, image ids are from `Visual Genome`. Also, you can run `main.py` to constrcut your own JBA dataset.
 
-rum `test.py` to generate test results for MLLM.
+Run `test.py` to generate test results for MLLM.
 
 run `evaluate.py` to evaluate the results and get metrics.
