@@ -15,11 +15,10 @@
   <img src="images/pipeline.jpg" alt="Method Overview" width="600">
 </p>
 
-<div align="center">
 
 [![Static Badge](https://img.shields.io/badge/arXiv-2510.10965-red)](http://arxiv.org/abs/2510.10965)
 [![Static Badge](https://img.shields.io/badge/Dataset-orange)](https://huggingface.co/datasets/KyrieLee/JBA)
-</div>
+
 
 ## 📋 Overview
 The original code of constructing JBA dataset is given in this repository, which is an evaluation set of false premise problems for MLLM.
