@@ -16,8 +16,8 @@
 </p>
 
 <div align="center">
+
 [![Static Badge](https://img.shields.io/badge/arXiv-2510.10965-red)](http://arxiv.org/abs/2510.10965)
-</div>
 [![Static Badge](https://img.shields.io/badge/Dataset-orange)](https://huggingface.co/datasets/KyrieLee/JBA)
 </div>
 
